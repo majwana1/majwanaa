@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#3d5a3e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ledger">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="Track donations and collections — JBL DKSC">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Apple touch icons -->
+    <link rel="apple-touch-icon" href="icons/icon-152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
+
+    <title>Collection Ledger 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --parchment:   #f5f0e8;
+            --cream:       #faf7f2;
+            --linen:       #ede8de;
+            --sand:        #d9d0bc;
+            --clay:        #b5a48a;
+            --umber:       #7a6652;
+            --bark:        #4a3728;
+            --forest:      #3d5a3e;
+            --moss:        #6b8f6c;
+            --terracotta:  #c4714a;
+            --gold:        #c9963a;
+            --google-blue: #4285f4;
+            --safe-top:    env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --radius:    14px;
+            --radius-sm: 9px;
+            --shadow:    0 2px 16px rgba(74,55,40,0.10);
+            --shadow-lg: 0 8px 40px rgba(74,55,40,0.16);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; height: 100%; }
+
+        body {
+            font-family: 'Crimson Pro', Georgia, serif;
+            background: var(--parchment);
+            color: var(--bark);
+            min-height: 100%;
+            min-height: -webkit-fill-available;
+            padding-bottom: calc(90px + var(--safe-bottom));
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            overscroll-behavior-y: none;
+        }
+
+        /* ── INSTALL BANNER ───────────────── */
+        .install-banner {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 1000;
+            background: var(--bark);
+            color: var(--cream);
+            padding: 16px 20px calc(16px + var(--safe-bottom));
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 -4px 20px rgba(74,55,40,0.3);
+            animation: slideUpBanner 0.4s ease;
+        }
+        .install-banner.show { display: flex; }
+        @keyframes slideUpBanner {
+            from { transform: translateY(100%); }
+            to   { transform: translateY(0); }
+        }
+        .install-icon { font-size: 2rem; flex-shrink: 0; }
+        .install-text { flex: 1; }
+        .install-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700; font-size: 0.95rem; margin-bottom: 2px;
+        }
+        .install-sub { font-style: italic; font-size: 0.78rem; opacity: 0.8; }
+        .install-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .btn-install {
+            background: var(--gold); color: var(--bark);
+            border: none; border-radius: 20px;
+            padding: 8px 16px; font-family: 'Playfair Display', serif;
+            font-weight: 700; font-size: 0.82rem; cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-install-dismiss {
+            background: transparent; color: var(--cream);
+            border: 1px solid rgba(245,240,232,0.3); border-radius: 20px;
+            padding: 8px 12px; font-family: 'Crimson Pro', serif;
+            font-size: 0.8rem; cursor: pointer; white-space: nowrap;
+        }
+
+        /* iOS install hint */
+        .ios-hint {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 1000;
+            background: var(--bark);
+            color: var(--cream);
+            padding: 18px 20px calc(20px + var(--safe-bottom));
+            text-align: center;
+            box-shadow: 0 -4px 20px rgba(74,55,40,0.3);
+            animation: slideUpBanner 0.4s ease;
+        }
+        .ios-hint.show { display: block; }
+        .ios-hint-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700; font-size: 1rem; margin-bottom: 8px;
+        }
+        .ios-hint-steps {
+            font-style: italic; font-size: 0.84rem; opacity: 0.85; line-height: 1.7;
+        }
+        .ios-hint-close {
+            margin-top: 14px; background: transparent; color: var(--gold);
+            border: 1px solid var(--gold); border-radius: 20px;
+            padding: 7px 20px; font-family: 'Crimson Pro', serif;
+            font-size: 0.85rem; cursor: pointer;
+        }
+
+        /* ── OFFLINE BADGE ── */
+        .offline-badge {
+            display: none;
+            position: fixed; top: calc(8px + var(--safe-top)); right: 12px;
+            z-index: 500;
+            background: var(--terracotta); color: white;
+            font-family: 'DM Mono', monospace; font-size: 0.65rem;
+            padding: 4px 10px; border-radius: 20px;
+            letter-spacing: 0.05em;
+        }
+        .offline-badge.show { display: block; }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--cream);
+            border-bottom: 1px solid var(--sand);
+            padding: calc(18px + var(--safe-top)) 20px 0;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header-top {
+            display: flex; align-items: flex-start;
+            justify-content: space-between; margin-bottom: 14px; gap: 10px;
+        }
+        .brand-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700; font-size: 1.25rem;
+            color: var(--bark); line-height: 1;
+        }
+        .brand-sub {
+            font-style: italic; font-size: 0.78rem;
+            color: var(--clay); margin-top: 3px;
+        }
+        .header-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+
+        .hdr-btn {
+            display: flex; align-items: center; gap: 5px;
+            padding: 6px 12px; border-radius: 30px;
+            border: 1px solid var(--sand); background: transparent;
+            font-family: 'Crimson Pro', serif; font-size: 0.78rem;
+            color: var(--umber); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .hdr-btn:hover, .hdr-btn:active { background: var(--linen); border-color: var(--clay); color: var(--bark); }
+        .hdr-btn.danger:active { border-color: var(--terracotta); color: var(--terracotta); }
+        .hdr-btn.drive-btn { background: var(--google-blue); color: white; border-color: var(--google-blue); font-weight: 600; }
+        .hdr-btn.drive-btn:hover, .hdr-btn.drive-btn:active { background: #2c6ee0; border-color: #2c6ee0; color: white; }
+        .hdr-btn.drive-btn.connected { background: var(--forest); border-color: var(--forest); }
+        .hdr-btn.drive-btn.connected:active { background: var(--bark); }
+
+        .drive-bar {
+            display: none; background: rgba(61,90,62,0.08);
+            border: 1px solid rgba(61,90,62,0.2); border-radius: var(--radius-sm);
+            padding: 7px 14px; margin-bottom: 10px;
+            font-style: italic; font-size: 0.8rem; color: var(--forest);
+            align-items: center; gap: 8px;
+        }
+        .drive-bar.show { display: flex; }
+        .drive-bar-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--forest); flex-shrink: 0;
+            animation: pulse 2s ease infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
+
+        /* ── STATS ── */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            border-top: 1px solid var(--sand); margin: 0 -20px;
+        }
+        .stat-cell { padding: 11px 6px; text-align: center; border-right: 1px solid var(--sand); }
+        .stat-cell:last-child { border-right: none; }
+        .stat-num {
+            font-family: 'Playfair Display', serif; font-weight: 600;
+            font-size: 0.9rem; color: var(--forest);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .stat-lbl { font-style: italic; font-size: 0.6rem; color: var(--clay); margin-top: 1px; }
+
+        /* ── SEARCH ── */
+        .search-wrap {
+            padding: 12px 20px; background: var(--cream);
+            border-bottom: 1px solid var(--sand);
+            position: sticky; top: 136px; z-index: 99;
+        }
+        .search-inner { position: relative; }
+        .search-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%); color: var(--clay); font-size: 13px; pointer-events: none;
+        }
+        .search-input {
+            width: 100%; background: var(--linen); border: 1px solid var(--sand);
+            color: var(--bark); padding: 10px 14px 10px 38px; border-radius: 30px;
+            font-family: 'Crimson Pro', serif; font-size: 0.95rem;
+            transition: all 0.2s; -webkit-appearance: none;
+        }
+        .search-input:focus { outline: none; border-color: var(--clay); background: var(--cream); }
+        .search-input::placeholder { color: var(--clay); font-style: italic; }
+
+        /* ── MAIN ── */
+        .main { padding: 18px 16px 0; }
+        .section-label {
+            font-family: 'Playfair Display', serif; font-style: italic;
+            font-size: 0.73rem; color: var(--clay); letter-spacing: 0.08em;
+            text-transform: uppercase; margin-bottom: 12px; padding-left: 4px;
+        }
+
+        /* ── CARDS ── */
+        .person-card {
+            background: var(--cream); border: 1px solid var(--sand);
+            border-radius: var(--radius); margin-bottom: 12px;
+            overflow: hidden; box-shadow: var(--shadow);
+            transition: box-shadow 0.25s, border-color 0.25s;
+        }
+        .person-header {
+            padding: 16px 18px 14px; display: flex;
+            align-items: flex-start; justify-content: space-between; gap: 12px;
+        }
+        .person-serial {
+            font-family: 'DM Mono', monospace; font-size: 0.58rem;
+            color: var(--gold); background: rgba(201,150,58,0.1);
+            border: 1px solid rgba(201,150,58,0.25); padding: 3px 9px;
+            border-radius: 4px; letter-spacing: 0.08em; display: inline-block; margin-bottom: 6px;
+        }
+        .person-name {
+            font-family: 'Playfair Display', serif; font-weight: 600;
+            font-size: 1rem; color: var(--bark); line-height: 1.2;
+        }
+        .person-count { font-style: italic; font-size: 0.74rem; color: var(--clay); margin-top: 3px; }
+        .person-total-wrap { text-align: right; flex-shrink: 0; }
+        .person-total { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.05rem; color: var(--forest); }
+        .person-total-lbl { font-style: italic; font-size: 0.66rem; color: var(--clay); margin-top: 2px; }
+        .card-divider { height: 1px; background: linear-gradient(to right, transparent, var(--sand) 20%, var(--sand) 80%, transparent); margin: 0 18px; }
+
+        .donation-row {
+            padding: 11px 18px; display: flex; align-items: center;
+            gap: 12px; border-bottom: 1px solid var(--linen); transition: background 0.15s;
+        }
+        .donation-row:last-of-type { border-bottom: none; }
+        .month-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--moss); flex-shrink: 0; }
+        .donation-month { font-style: italic; font-size: 0.78rem; color: var(--umber); width: 62px; flex-shrink: 0; }
+        .donation-mid { flex: 1; min-width: 0; }
+        .donation-amount { font-family: 'DM Mono', monospace; font-size: 0.84rem; color: var(--forest); }
+        .donation-notes { font-size: 0.74rem; color: var(--clay); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-style: italic; }
+        .donation-actions { display: flex; gap: 5px; flex-shrink: 0; }
+        .action-btn {
+            width: 32px; height: 32px; border-radius: 8px;
+            border: 1px solid var(--sand); background: transparent;
+            color: var(--clay); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 13px;
+            transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+        }
+        .action-btn.edit:active { border-color: var(--forest); color: var(--forest); background: rgba(61,90,62,0.06); }
+        .action-btn.del:active  { border-color: var(--terracotta); color: var(--terracotta); background: rgba(196,113,74,0.06); }
+        .add-row-btn {
+            width: 100%; padding: 13px 18px; background: var(--linen);
+            border: none; color: var(--umber); font-family: 'Crimson Pro', serif;
+            font-style: italic; font-size: 0.86rem; cursor: pointer;
+            text-align: left; border-top: 1px solid var(--sand);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .add-row-btn:active { background: var(--sand); }
+
+        /* ── FAB ── */
+        .fab {
+            position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 200;
+            background: var(--forest); color: var(--cream); border: none;
+            border-radius: 30px; padding: 0 22px; height: 52px;
+            font-family: 'Crimson Pro', serif; font-size: 1rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 20px rgba(61,90,62,0.35); transition: transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .fab:active { transform: scale(0.96); }
+
+        /* ── EMPTY STATE ── */
+        .empty-state { text-align: center; padding: 60px 30px; }
+        .empty-ornament { font-size: 2.5rem; margin-bottom: 14px; opacity: 0.5; }
+        .empty-title { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.2rem; color: var(--umber); margin-bottom: 8px; }
+        .empty-sub { font-style: italic; color: var(--clay); font-size: 0.88rem; }
+        .empty-serial {
+            display: inline-block; margin-top: 14px;
+            font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--gold);
+            background: rgba(201,150,58,0.08); border: 1px solid rgba(201,150,58,0.2);
+            padding: 5px 14px; border-radius: 5px; letter-spacing: 0.05em;
+        }
+
+        /* ── MODALS ── */
+        .overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(30,22,16,0.52); z-index: 500;
+            align-items: flex-end; justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .overlay.show { display: flex; }
+        .overlay.center { align-items: center; padding: 20px; }
+
+        .sheet {
+            background: var(--cream); border: 1px solid var(--sand);
+            border-bottom: none; border-radius: var(--radius) var(--radius) 0 0;
+            width: 100%; max-width: 560px;
+            max-height: calc(95vh - var(--safe-top));
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            animation: riseUp 0.32s cubic-bezier(0.34,1.4,0.64,1);
+            box-shadow: 0 -8px 40px rgba(74,55,40,0.18);
+            padding-bottom: var(--safe-bottom);
+        }
+        @keyframes riseUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .sheet-handle { width: 32px; height: 3px; background: var(--sand); border-radius: 2px; margin: 14px auto 0; }
+        .sheet-header { padding: 18px 22px 0; display: flex; align-items: center; justify-content: space-between; }
+        .sheet-title { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1.1rem; color: var(--bark); }
+        .sheet-close { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--sand); background: var(--linen); color: var(--clay); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+        .sheet-body { padding: 18px 22px 24px; }
+
+        .notice { padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 14px; font-size: 0.86rem; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+        .notice.info    { background: rgba(107,143,108,0.1); border: 1px solid rgba(107,143,108,0.25); color: var(--forest); }
+        .notice.warning { background: rgba(201,150,58,0.1);  border: 1px solid rgba(201,150,58,0.25);  color: var(--gold); }
+
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-style: italic; font-size: 0.76rem; color: var(--umber); margin-bottom: 5px; }
+        .form-input, .form-select {
+            width: 100%; background: var(--linen); border: 1px solid var(--sand);
+            color: var(--bark); padding: 13px 14px; border-radius: var(--radius-sm);
+            font-family: 'Crimson Pro', serif; font-size: 1rem;
+            transition: border-color 0.2s, background 0.2s; -webkit-appearance: none; appearance: none;
+        }
+        .form-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23b5a48a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px;
+        }
+        .form-input:focus, .form-select:focus { outline: none; border-color: var(--forest); background: var(--cream); }
+        .form-input::placeholder { color: var(--clay); font-style: italic; }
+        .form-input:read-only { opacity: 0.55; }
+        option { background: var(--cream); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-divider { height: 1px; background: linear-gradient(to right, transparent, var(--sand), transparent); margin: 4px 0 16px; }
+
+        .btn-save { width: 100%; padding: 15px; background: var(--forest); color: var(--cream); border: none; border-radius: var(--radius-sm); font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1rem; cursor: pointer; margin-bottom: 10px; transition: background 0.2s; }
+        .btn-save:active { background: var(--bark); }
+        .btn-cancel { width: 100%; padding: 12px; background: transparent; color: var(--umber); border: 1px solid var(--sand); border-radius: var(--radius-sm); font-family: 'Crimson Pro', serif; font-size: 0.93rem; cursor: pointer; }
+        .btn-cancel:active { border-color: var(--clay); }
+
+        /* Drive modal */
+        .dialog { background: var(--cream); border: 1px solid var(--sand); border-radius: var(--radius); width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; padding: 26px 22px; box-shadow: var(--shadow-lg); animation: gentlePop 0.25s ease; }
+        @keyframes gentlePop { from { transform: scale(0.93); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .dialog-ornament { text-align: center; font-size: 2rem; margin-bottom: 12px; }
+        .dialog-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; text-align: center; color: var(--bark); margin-bottom: 10px; }
+        .dialog-desc { font-style: italic; font-size: 0.86rem; color: var(--umber); text-align: center; line-height: 1.7; margin-bottom: 16px; }
+        .dialog-steps { background: var(--linen); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 0.82rem; color: var(--umber); line-height: 1.9; }
+        .dialog-steps strong { color: var(--bark); }
+        .dialog-input { width: 100%; background: var(--linen); border: 1px solid var(--sand); color: var(--bark); padding: 10px 12px; border-radius: var(--radius-sm); font-family: 'DM Mono', monospace; font-size: 0.78rem; transition: border-color 0.2s; margin-bottom: 10px; -webkit-appearance: none; }
+        .dialog-input:focus { outline: none; border-color: var(--forest); }
+        .dialog-input::placeholder { color: var(--clay); font-style: italic; font-family: 'Crimson Pro', serif; font-size: 0.85rem; }
+        .btn-connect { width: 100%; padding: 13px; background: var(--google-blue); color: white; border: none; border-radius: var(--radius-sm); font-family: 'Playfair Display', serif; font-weight: 600; font-size: 0.95rem; cursor: pointer; margin-bottom: 10px; }
+        .btn-connect:active { opacity: 0.85; }
+        .btn-reset-confirm { width: 100%; padding: 13px; background: var(--terracotta); color: white; border: none; border-radius: var(--radius-sm); font-family: 'Playfair Display', serif; font-size: 0.93rem; cursor: pointer; margin-bottom: 10px; }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%;
+            transform: translateX(-50%) translateY(12px);
+            background: var(--bark); color: var(--cream);
+            padding: 9px 20px; border-radius: 30px;
+            font-style: italic; font-size: 0.88rem;
+            z-index: 999; opacity: 0; transition: all 0.3s;
+            white-space: nowrap; pointer-events: none;
+            box-shadow: 0 4px 16px rgba(74,55,40,0.25);
+            max-width: 90vw; text-align: center;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 4px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── RESPONSIVE ── */
+        @media (min-width: 600px) {
+            .main { padding: 22px 24px 0; }
+            .header { padding: calc(20px + var(--safe-top)) 24px 0; }
+            .search-wrap { padding: 12px 24px; }
+            .overlay { align-items: center; }
+            .sheet { border-radius: var(--radius); border-bottom: 1px solid var(--sand); margin: 20px; max-height: 88vh; padding-bottom: 0; }
+            .sheet-handle { display: none; }
+        }
+        @media (min-width: 860px) {
+            .people-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+            .person-card { margin-bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- OFFLINE BADGE -->
+<div class="offline-badge" id="offlineBadge">● OFFLINE</div>
+
+<!-- ANDROID INSTALL BANNER -->
+<div class="install-banner" id="installBanner">
+    <div class="install-icon">📒</div>
+    <div class="install-text">
+        <div class="install-title">Install Collection Ledger</div>
+        <div class="install-sub">Add to home screen — works offline</div>
+    </div>
+    <div class="install-actions">
+        <button class="btn-install" id="installBtn">Install</button>
+        <button class="btn-install-dismiss" onclick="dismissInstall()">Later</button>
+    </div>
+</div>
+
+<!-- iOS INSTALL HINT -->
+<div class="ios-hint" id="iosHint">
+    <div class="ios-hint-title">📒 Install on iPhone / iPad</div>
+    <div class="ios-hint-steps">
+        Tap the <strong>Share button</strong> (□↑) in Safari<br>
+        then choose <strong>"Add to Home Screen"</strong><br>
+        The app will appear on your home screen like any other app.
+    </div>
+    <button class="ios-hint-close" onclick="dismissIos()">Got it</button>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-top">
+        <div class="brand">
+            <div class="brand-title">Collection Ledger</div>
+            <div class="brand-sub">Season of 2026 · JBL DKSC</div>
+        </div>
+        <div class="header-actions">
+            <button class="hdr-btn drive-btn" id="driveBtn" onclick="handleDriveBtn()">☁ Drive</button>
+            <button class="hdr-btn" onclick="downloadCSV()">↓ CSV</button>
+            <button class="hdr-btn danger" onclick="resetAllData()">↺</button>
+        </div>
+    </div>
+    <div class="drive-bar" id="driveBar">
+        <span class="drive-bar-dot"></span>
+        <span id="driveBarText">Connected to Google Drive</span>
+    </div>
+    <div class="stats-row">
+        <div class="stat-cell"><div class="stat-num" id="totalAmount">SAR 0</div><div class="stat-lbl">Collected</div></div>
+        <div class="stat-cell"><div class="stat-num" id="totalPeople">0</div><div class="stat-lbl">People</div></div>
+        <div class="stat-cell"><div class="stat-num" id="totalDonations">0</div><div class="stat-lbl">Entries</div></div>
+        <div class="stat-cell"><div class="stat-num" id="bestMonth">—</div><div class="stat-lbl">Best Month</div></div>
+    </div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-wrap">
+    <div class="search-inner">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="searchBox" type="text" placeholder="Search by name or serial…" oninput="showData()" autocomplete="off">
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="section-label" id="sectionLabel"></div>
+    <div class="people-grid" id="peopleList"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-ornament">📜</div>
+        <div class="empty-title">The ledger is empty</div>
+        <div class="empty-sub">Begin by recording your first donation below</div>
+        <div class="empty-serial" id="nextSerialDisplay">JBL DKSC 1</div>
+    </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openModal()"><span>＋</span> Record Donation</button>
+
+<!-- ADD / EDIT SHEET -->
+<div class="overlay" id="myModal" onclick="overlayClick(event,'myModal')">
+    <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+            <div class="sheet-title" id="modalTitle">Record a Donation</div>
+            <button class="sheet-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="sheet-body">
+            <div class="notice info" id="serialInfoBox" style="display:none;"><span>🔖</span><span>Serial: <strong id="assignedSerial"></strong></span></div>
+            <div class="notice warning" id="nameWarning" style="display:none;"><span>⚑</span><span>Person exists under <strong id="existingSerialLabel"></strong> — will be added there.</span></div>
+            <input type="hidden" id="existingPersonSerial">
+            <input type="hidden" id="editingDonationIndex" value="">
+            <div class="form-group">
+                <label class="form-label">Person or Entity Name</label>
+                <input class="form-input" id="name" type="text" placeholder="Full name…" autocomplete="off" onblur="checkExistingPerson()">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Month</label>
+                    <select class="form-select" id="month">
+                        <option value="">Select…</option>
+                        <option>January</option><option>February</option><option>March</option>
+                        <option>April</option><option>May</option><option>June</option>
+                        <option>July</option><option>August</option><option>September</option>
+                        <option>October</option><option>November</option><option>December</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount (SAR)</label>
+                    <input class="form-input" id="amount" type="number" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <input class="form-input" id="details" type="text" placeholder="Any remarks… (optional)">
+            </div>
+            <div class="form-divider"></div>
+            <button class="btn-save" onclick="saveData()">Save to Ledger</button>
+            <button class="btn-cancel" onclick="closeModal()">Discard</button>
+        </div>
+    </div>
+</div>
+
+<!-- DRIVE SETUP -->
+<div class="overlay center" id="driveModal" onclick="overlayClick(event,'driveModal')">
+    <div class="dialog">
+        <div class="dialog-ornament">☁️</div>
+        <div class="dialog-title">Connect Google Drive</div>
+        <div class="dialog-desc">Your data will be saved as a Google Sheet, synced automatically with every entry.</div>
+        <div class="dialog-steps">
+            <strong>Setup (one time only):</strong><br>
+            1. Go to <strong>console.cloud.google.com</strong><br>
+            2. Enable <strong>Sheets API</strong> &amp; <strong>Drive API</strong><br>
+            3. Create <strong>OAuth 2.0 Client ID</strong> (Web app)<br>
+            4. Add this file's URL as authorised origin<br>
+            5. Paste credentials below
+        </div>
+        <label class="form-label">OAuth Client ID</label>
+        <input class="dialog-input" id="clientIdInput" type="text" placeholder="xxxxxxxx.apps.googleusercontent.com">
+        <label class="form-label">API Key</label>
+        <input class="dialog-input" id="apiKeyInput" type="text" placeholder="AIzaSy…">
+        <br>
+        <button class="btn-connect" id="connectBtn" onclick="connectDrive()">Connect &amp; Authorise Google</button>
+        <button class="btn-cancel" onclick="closeDriveModal()">Not now</button>
+    </div>
+</div>
+
+<!-- RESET MODAL -->
+<div class="overlay center" id="resetModal" onclick="overlayClick(event,'resetModal')">
+    <div class="dialog">
+        <div class="dialog-ornament">🍂</div>
+        <div class="dialog-title">Clear the Ledger?</div>
+        <div class="dialog-desc">All records will be permanently erased. The next entry will begin at <strong>JBL DKSC 1</strong>.</div>
+        <button class="btn-reset-confirm" onclick="confirmReset()">Yes, Clear Everything</button>
+        <button class="btn-cancel" onclick="closeResetModal()">No, Keep My Records</button>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════ STATE ═══════ */
+let people = {};
+let maxSerialNumber = 0;
+let gAccessToken = null;
+let gSheetId     = null;
+let gClientId    = localStorage.getItem('gClientId') || '';
+let gApiKey      = localStorage.getItem('gApiKey')   || '';
+let driveReady   = false;
+let deferredPrompt = null; // PWA install prompt
+
+/* ═══════ PWA: SERVICE WORKER ═══════ */
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registered', reg.scope))
+            .catch(err => console.warn('SW failed', err));
+    });
+}
+
+/* ═══════ PWA: INSTALL PROMPT ═══════ */
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Show banner after a short delay
+    setTimeout(() => {
+        if (!localStorage.getItem('pwaInstalled') && !localStorage.getItem('pwaDismissed')) {
+            document.getElementById('installBanner').classList.add('show');
+        }
+    }, 3000);
+});
+
+document.getElementById('installBtn').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+        localStorage.setItem('pwaInstalled', '1');
+        toast('✅ App installed! Find it on your home screen');
+    }
+    deferredPrompt = null;
+    document.getElementById('installBanner').classList.remove('show');
+});
+
+window.addEventListener('appinstalled', () => {
+    localStorage.setItem('pwaInstalled', '1');
+    document.getElementById('installBanner').classList.remove('show');
+});
+
+function dismissInstall() {
+    localStorage.setItem('pwaDismissed', '1');
+    document.getElementById('installBanner').classList.remove('show');
+}
+
+/* iOS Safari hint */
+function isIos() { return /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()); }
+function isInStandaloneMode() { return navigator.standalone === true; }
+window.addEventListener('load', () => {
+    if (isIos() && !isInStandaloneMode() && !localStorage.getItem('iosHintDismissed')) {
+        setTimeout(() => document.getElementById('iosHint').classList.add('show'), 4000);
+    }
+});
+function dismissIos() {
+    localStorage.setItem('iosHintDismissed', '1');
+    document.getElementById('iosHint').classList.remove('show');
+}
+
+/* ═══════ OFFLINE DETECTION ═══════ */
+function updateOnlineStatus() {
+    document.getElementById('offlineBadge').classList.toggle('show', !navigator.onLine);
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+/* ═══════ INIT ═══════ */
+window.onload = () => { loadLocal(); if (gClientId && gApiKey) loadGapi(); };
+
+function loadLocal() {
+    try {
+        const s = localStorage.getItem('collectionPeople');
+        if (s) people = JSON.parse(s);
+        const mx = localStorage.getItem('maxSerialNumber');
+        if (mx) maxSerialNumber = parseInt(mx);
+        else if (Object.keys(people).length > 0)
+            maxSerialNumber = Math.max(...Object.keys(people).map(k => { const m=k.match(/JBL DKSC (\d+)/); return m?parseInt(m[1]):0; }));
+        gSheetId = localStorage.getItem('gSheetId') || null;
+    } catch(e) { people={}; maxSerialNumber=0; }
+    showData();
+}
+function persist() {
+    localStorage.setItem('collectionPeople', JSON.stringify(people));
+    localStorage.setItem('maxSerialNumber', String(maxSerialNumber));
+}
+function newSerial() { return 'JBL DKSC ' + (++maxSerialNumber); }
+
+/* ═══════ GOOGLE DRIVE ═══════ */
+function loadGapi() {
+    ['https://accounts.google.com/gsi/client', 'https://apis.google.com/js/api.js'].forEach((src, i) => {
+        const s = document.createElement('script'); s.src = src; s.async = true;
+        if (i === 1) s.onload = () => gapi.load('client', async () => {
+            try {
+                await gapi.client.init({ apiKey: gApiKey, discoveryDocs: [
+                    'https://sheets.googleapis.com/$discovery/rest?version=v4',
+                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
+                ]});
+                driveReady = true;
+                requestToken(true);
+            } catch(e) { console.warn('GAPI init error', e); }
+        });
+        document.head.appendChild(s);
+    });
+}
+function requestToken(silent=false) {
+    if (!driveReady || !gClientId) return;
+    const client = google.accounts.oauth2.initTokenClient({
+        client_id: gClientId,
+        scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+        callback: resp => {
+            if (resp.error) { if (!silent) toast('Auth failed: ' + resp.error); return; }
+            gAccessToken = resp.access_token;
+            gapi.client.setToken({ access_token: gAccessToken });
+            updateDriveUI(true); closeDriveModal();
+            toast('☁ Connected to Google Drive');
+            if (!gSheetId) createSheet();
+        },
+        error_callback: e => { if (!silent) toast('Auth error'); }
+    });
+    client.requestAccessToken({ prompt: silent ? 'none' : '' });
+}
+function updateDriveUI(on) {
+    const btn = document.getElementById('driveBtn');
+    const bar = document.getElementById('driveBar');
+    btn.classList.toggle('connected', on);
+    btn.innerHTML = on ? '☁ Drive ✓' : '☁ Drive';
+    bar.classList.toggle('show', on);
+}
+function handleDriveBtn() { gAccessToken ? syncToDrive() : (document.getElementById('clientIdInput').value=gClientId, document.getElementById('apiKeyInput').value=gApiKey, document.getElementById('driveModal').classList.add('show')); }
+function closeDriveModal() { document.getElementById('driveModal').classList.remove('show'); }
+function connectDrive() {
+    const cid=document.getElementById('clientIdInput').value.trim();
+    const key=document.getElementById('apiKeyInput').value.trim();
+    if (!cid||!key) { toast('Enter both Client ID and API Key'); return; }
+    gClientId=cid; gApiKey=key;
+    localStorage.setItem('gClientId',gClientId); localStorage.setItem('gApiKey',gApiKey);
+    const btn=document.getElementById('connectBtn');
+    btn.innerHTML='<span class="spin"></span>Connecting…'; btn.disabled=true;
+    loadGapi();
+    setTimeout(() => { requestToken(false); btn.innerHTML='Connect &amp; Authorise Google'; btn.disabled=false; }, 2500);
+}
+async function createSheet() {
+    try {
+        toast('Creating Google Sheet…');
+        const res = await gapi.client.sheets.spreadsheets.create({ resource: { properties: { title: 'Collection Ledger 2026' }, sheets: [{ properties: { title: 'Donations' } }] } });
+        gSheetId = res.result.spreadsheetId;
+        localStorage.setItem('gSheetId', gSheetId);
+        await syncToDrive();
+        toast('☁ Sheet created & synced!');
+    } catch(e) { toast('Could not create Sheet'); }
+}
+async function syncToDrive() {
+    if (!gAccessToken || !gSheetId) { toast('Not connected to Drive'); return; }
+    try {
+        const rows=[['Serial','Name','Month','Amount (SAR)','Notes','Synced At']];
+        const now=new Date().toLocaleString();
+        for (const s in people) for (const d of people[s].donations) rows.push([s,people[s].name,d.month,d.amount,d.details||'',now]);
+        await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId:gSheetId, range:'Donations' });
+        await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId:gSheetId, range:'Donations!A1', valueInputOption:'USER_ENTERED', resource:{values:rows} });
+        await gapi.client.sheets.spreadsheets.batchUpdate({ spreadsheetId:gSheetId, resource:{ requests:[{ repeatCell:{ range:{sheetId:0,startRowIndex:0,endRowIndex:1}, cell:{userEnteredFormat:{backgroundColor:{red:0.24,green:0.35,blue:0.24},textFormat:{foregroundColor:{red:0.98,green:0.97,blue:0.95},bold:true}}}, fields:'userEnteredFormat(backgroundColor,textFormat)' }}]}});
+        toast('☁ Synced to Google Drive');
+    } catch(e) { toast('Sync failed — check connection'); }
+}
+
+/* ═══════ RENDER ═══════ */
+function showData() {
+    const q=document.getElementById('searchBox').value.toLowerCase().trim();
+    const list=document.getElementById('peopleList'), empty=document.getElementById('emptyState'), lbl=document.getElementById('sectionLabel');
+    document.getElementById('nextSerialDisplay').textContent='Next: JBL DKSC '+(maxSerialNumber+1);
+    const keys=Object.keys(people).filter(s=>!q||people[s].name.toLowerCase().includes(q)||s.toLowerCase().includes(q));
+    updateStats();
+    if (!keys.length) { list.innerHTML=''; empty.style.display='block'; lbl.textContent=''; return; }
+    empty.style.display='none';
+    lbl.textContent=keys.length+(keys.length===1?' person':' people')+' on record';
+    list.innerHTML=keys.map(serial=>{
+        const p=people[serial], total=p.donations.reduce((s,d)=>s+d.amount,0);
+        return `<div class="person-card">
+            <div class="person-header">
+                <div><span class="person-serial">${serial}</span><div class="person-name">${esc(p.name)}</div><div class="person-count">${p.donations.length} donation${p.donations.length!==1?'s':''}</div></div>
+                <div class="person-total-wrap"><div class="person-total">SAR ${total.toLocaleString()}</div><div class="person-total-lbl">total given</div></div>
+            </div>
+            <div class="card-divider"></div>
+            ${p.donations.map((d,i)=>`<div class="donation-row">
+                <span class="month-pip"></span><span class="donation-month">${d.month}</span>
+                <div class="donation-mid"><div class="donation-amount">SAR ${d.amount.toLocaleString()}</div><div class="donation-notes">${esc(d.details)||'No notes'}</div></div>
+                <div class="donation-actions">
+                    <button class="action-btn edit" onclick="editDonation('${serial}',${i})">✎</button>
+                    <button class="action-btn del"  onclick="delDonation('${serial}',${i})">✕</button>
+                </div></div>`).join('')}
+            <button class="add-row-btn" onclick="openModal('${serial}')">+ Add another donation for ${esc(p.name)}</button>
+        </div>`;
+    }).join('');
+}
+function updateStats() {
+    let tot=0,cnt=0; const months={};
+    for (let s in people) for (let d of people[s].donations) { tot+=d.amount; cnt++; months[d.month]=(months[d.month]||0)+d.amount; }
+    let best='—',bestAmt=0; for (let m in months) if (months[m]>bestAmt) { bestAmt=months[m]; best=m.slice(0,3); }
+    document.getElementById('totalAmount').textContent='SAR '+tot.toLocaleString();
+    document.getElementById('totalPeople').textContent=Object.keys(people).length;
+    document.getElementById('totalDonations').textContent=cnt;
+    document.getElementById('bestMonth').textContent=best;
+}
+
+/* ═══════ MODAL ═══════ */
+function openModal(pre='') {
+    clearForm(); document.getElementById('existingPersonSerial').value=pre;
+    if (pre&&people[pre]) { document.getElementById('name').value=people[pre].name; document.getElementById('name').readOnly=true; document.getElementById('serialInfoBox').style.display='flex'; document.getElementById('assignedSerial').textContent=pre; }
+    document.getElementById('myModal').classList.add('show');
+}
+function closeModal() { document.getElementById('myModal').classList.remove('show'); document.getElementById('name').readOnly=false; }
+function clearForm() {
+    ['name','month','amount','details'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('existingPersonSerial').value=''; document.getElementById('editingDonationIndex').value='';
+    document.getElementById('nameWarning').style.display='none'; document.getElementById('serialInfoBox').style.display='none';
+    document.getElementById('modalTitle').textContent='Record a Donation'; document.getElementById('name').readOnly=false;
+}
+function overlayClick(e,id) { if(e.target===document.getElementById(id)) { if(id==='myModal')closeModal(); else if(id==='driveModal')closeDriveModal(); else closeResetModal(); } }
+function checkExistingPerson() {
+    const name=document.getElementById('name').value.trim().toLowerCase();
+    const warn=document.getElementById('nameWarning'), info=document.getElementById('serialInfoBox'), inp=document.getElementById('existingPersonSerial');
+    if (!name) { warn.style.display='none'; info.style.display='none'; return; }
+    let found=null; for (let s in people) if (people[s].name.toLowerCase()===name) { found=s; break; }
+    if (found) { warn.style.display='flex'; document.getElementById('existingSerialLabel').textContent=found; info.style.display='flex'; document.getElementById('assignedSerial').textContent=found; inp.value=found; }
+    else { warn.style.display='none'; info.style.display='flex'; document.getElementById('assignedSerial').textContent='JBL DKSC '+(maxSerialNumber+1)+' (new)'; inp.value=''; }
+}
+function saveData() {
+    const name=document.getElementById('name').value.trim(), month=document.getElementById('month').value;
+    const amount=parseFloat(document.getElementById('amount').value), details=document.getElementById('details').value.trim();
+    const pre=document.getElementById('existingPersonSerial').value, editIdx=document.getElementById('editingDonationIndex').value;
+    if (!name) { toast('Please enter a name'); return; }
+    if (!month) { toast('Please select a month'); return; }
+    if (!amount||amount<=0) { toast('Enter a valid amount'); return; }
+    let serial;
+    if (pre&&people[pre]) { serial=pre; }
+    else { let found=null; for (let s in people) if(people[s].name.toLowerCase()===name.toLowerCase()){found=s;break;} if(found){serial=found;}else{serial=newSerial();people[serial]={name,donations:[]};} }
+    const entry={month,amount,details};
+    if (editIdx!=='') { people[serial].donations[parseInt(editIdx)]=entry; toast('Entry updated'); }
+    else { people[serial].donations.push(entry); toast('Donation recorded'); }
+    persist(); closeModal(); showData();
+    if (gAccessToken&&gSheetId) syncToDrive();
+}
+function editDonation(serial,i) {
+    const d=people[serial].donations[i]; clearForm();
+    document.getElementById('modalTitle').textContent='Edit Entry';
+    document.getElementById('name').value=people[serial].name; document.getElementById('name').readOnly=true;
+    document.getElementById('month').value=d.month; document.getElementById('amount').value=d.amount;
+    document.getElementById('details').value=d.details||''; document.getElementById('existingPersonSerial').value=serial;
+    document.getElementById('editingDonationIndex').value=i; document.getElementById('serialInfoBox').style.display='flex';
+    document.getElementById('assignedSerial').textContent=serial; document.getElementById('myModal').classList.add('show');
+}
+function delDonation(serial,i) {
+    if (!confirm('Remove this donation entry?')) return;
+    people[serial].donations.splice(i,1); if(!people[serial].donations.length)delete people[serial];
+    persist(); showData(); toast('Entry removed');
+    if (gAccessToken&&gSheetId) syncToDrive();
+}
+
+/* ═══════ RESET ═══════ */
+function resetAllData() { document.getElementById('resetModal').classList.add('show'); }
+function closeResetModal() { document.getElementById('resetModal').classList.remove('show'); }
+function confirmReset() {
+    people={}; maxSerialNumber=0;
+    localStorage.removeItem('collectionPeople'); localStorage.removeItem('maxSerialNumber');
+    closeResetModal(); showData(); toast('Ledger cleared');
+    if (gAccessToken&&gSheetId) syncToDrive();
+}
+
+/* ═══════ CSV ═══════ */
+function downloadCSV() {
+    if (!Object.keys(people).length) { toast('No data to export'); return; }
+    let csv='Serial,Name,Month,Amount (SAR),Notes\n';
+    for (let s in people) for (let d of people[s].donations) csv+=`"${q(s)}","${q(people[s].name)}","${q(d.month)}",${d.amount},"${q(d.details||'')}"\n`;
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+    a.download='collection_ledger_2026.csv'; a.click(); toast('CSV exported');
+}
+
+/* ═══════ UTILS ═══════ */
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._tid); t._tid=setTimeout(()=>t.classList.remove('show'),2800); }
+function q(t) { return (t||'').replace(/"/g,'""'); }
+function esc(t) { if(!t)return''; const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+</script>
+</body>
+</html>
